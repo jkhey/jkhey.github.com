@@ -93,10 +93,12 @@ function getPIRTable(){
 		, dataType: 'json', cache:'false', type:"POST" , error: function(err1, err2, err3){ tries++; if(tries < 5) getPIRTable(); consoleLog(err1);},
 		success: function(jsnRet, textStatus) { 
 			if(jsnRet){	
-				var rows = jsnRet.rows[0];
+				if(jsnRet.rows){
+					var rows = jsnRet.rows[0];
 consoleLog(rows);
-				for(var i = 0; i < rows.length; i++){
-					if(rows[1] == fusionTableRealName) fusionTableEncName = rows[0];
+					for(var i = 0; i < rows.length; i++){
+						if(rows[1] == fusionTableRealName) fusionTableEncName = rows[0];
+					}
 				}
 				if(!fusionTableEncName) { // if the PIR table can't be found, create it
 					var sql = "CREATE TABLE '" + fusionTableRealName + "'  (pirfrom:NUMBER, pirto:NUMBER, pirtype:STRING, pirvalue:STRING, pircreated:DATETIME, piredited:DATETIME)";
