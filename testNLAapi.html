@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Search: Meanjin+2011+Spring</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="author" content="">
+<!-- Bootstrap -->
+
+<link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
+<style type="text/css">
+  body {
+padding-top: 60px;
+padding-bottom: 40px;
+  }
+</style>
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<script src="http://code.jquery.com/jquery-latest.js"></script>
+<!-- Fav and touch icons -->
+<link rel="shortcut icon" href="../assets/ico/favicon.ico">
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
+<link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png">
+<link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
+<link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">
+
+<script type="text/javascript">
+
+// http://api.trove.nla.gov.au/result?key=qpm9bpknti5p6bf3&zone=all&q=Meanjin+2011+Spring&include=tags&vendor=Informit&encoding=json
+
+$(document).ready(function(){
+$.ajax({
+  		//url: "http://api.trove.nla.gov.au/newspaper/" + this.href.replace("http://nla.gov.au/nla.news-article","") + "?key=qpm9bpknti5p6bf3&include=articletext&encoding=json",
+  		url:"http://api.trove.nla.gov.au/result?n=100&key=qpm9bpknti5p6bf3&zone=all&q=Meanjin+2011+Spring&include=tags&vendor=Informit&encoding=json&reclevel=full",
+ dataType: 'jsonp', 
+// context:{el:$(this)},
+  success: function(jsonObj) {
+  for(var i = 0; i < jsonObj.response.zone.length; i++){
+        $("#results").append("<h2>" + jsonObj.response.zone[i].name + "</h2>");
+        $("#results").append("<div>" + jsonObj.response.zone[i].records.total + "</div>");  
+        if(jsonObj.response.zone[i].records.work){
+        	$("#results").append("<ul>");
+        	 for(var j = 0; j < jsonObj.response.zone[i].records.work.length; j++){
+        		//$("#results").append("<li>" + JSON.stringify(jsonObj.response.zone[i].records.work[j]) + "</li>");
+        		if( jsonObj.response.zone[i].name == "article") { //jsonObj.response.zone[i].records.work[j].type && jsonObj.response.zone[i].records.work[j].type.length > 0 && jsonObj.response.zone[i].records.work[j].type[0].indexOf("Article") > -1){
+        			getWork(jsonObj.response.zone[i].records.work[j].id);
+        		}
+        			
+        		
+        	}
+        	$("#results").append("</ul>");
+        }
+    }
+}
+    });
+});
+
+function getWork(rid, toFind){
+	$.ajax({
+  		url:"http://api.trove.nla.gov.au/work/" + rid + "?key=qpm9bpknti5p6bf3&encoding=json&reclevel=full&include=workversions",
+		dataType: 'jsonp', 
+		// context:{el:$(this)},
+		success: function(jsonObj) {
+			//for(var i = 0; i < jsonObj.response.zone.length; i++){
+        		$("#works").append("<h2>" + jsonObj.work.title + "</h2>");
+        		if(jsonObj.work.version[0].record[0].abstract) $("#works").append("<div class='firstLineOfVerse' style='font-style:italic'>" + jsonObj.work.version[0].record[0].abstract[0] + "</div>");  
+        		// $("#works").append("<div>" + jsonObj.work.type + "</div>");  
+        		if(jsonObj.work.contributor) $("#works").append("<div><strong>" + jsonObj.work.contributor[0] + "</strong></div>");
+        		if(jsonObj.work.version[0].record[0].type) $("#works").append("<div><strong>" + jsonObj.work.version[0].record[0].type + "</strong></div>");  
+        		if(jsonObj.work.version[0].record[0].isPartOf && jsonObj.work.version[0].record[0].isPartOf.length) $("#works").append("<div>" + jsonObj.work.version[0].record[0].isPartOf[0].value + "</div>");  
+        		else if(jsonObj.work.version[0].record[0].isPartOf) $("#works").append("<div>" + jsonObj.work.version[0].record[0].isPartOf.value + "</div>");  
+        		$("#works").append("<div>" + JSON.stringify(jsonObj.work.version[0].record[0].bibliographicCitation) + "</div>");  
+        		if(jsonObj.work.version[0].record[0].subject) $("#works").append("<div>" + JSON.stringify(jsonObj.work.version[0].record[0].subject) + "</div>"); 
+        		$("#articleCount").text((parseInt($("#articleCount").text()) + 1));
+			//}
+	
+		}
+		
+	});
+
+}
+
+
+function scrapeThisRecord(rid, newLocation){
+	$.ajax({
+		url:(newLocation?newLocation:"http://trove.nla.gov.au/work/" + rid + "?key=qpm9bpknti5p6bf3"),
+ 		dataType: 'jsonp', 
+		// context:{el:$(this)},
+		error: function(one, two, three){
+console.log("++++++++++");		
+console.log(one);
+console.log(one.getAllResponseHeaders());
+console.log(two);
+console.log(three);		
+		},
+  		success: function(htmlObj) {
+			$("#scrapings textarea").val($("#scrapings textarea").val() + htmlObj);
+		},
+		complete: function(one, two){
+console.log("###########");		
+console.log(one);
+console.log(one.getResponseHeader("Location"));
+console.log(two);
+		
+		}
+	});
+}
+</script>
+</head>
+<body>
+   <div class="navbar navbar-inverse navbar-fixed-top">
+  <div class="navbar-inner">
+<div class="container">
+  <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+<span class="icon-bar"></span>
+<span class="icon-bar"></span>
+<span class="icon-bar"></span>
+  </a>
+  <a class="brand" href="#">NLA Import</a>
+  <div class="nav-collapse collapse">
+<ul class="nav">
+<!--  <li class="active"><a href="#">Home</a></li>
+  <li><a href="#about">About</a></li>
+  <li><a href="#contact">Contact</a></li>-->
+
+</ul>
+  </div><!--/.nav-collapse -->
+</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="row">
+<div class="span4">
+
+<form>
+<fieldset>
+<legend>Search</legend>
+<label></label>
+   <input type="text" class="input-medium search-query" />
+  <button class="btn btn-primary">Search</button>
+  </fieldset>
+  </form>
+  
+</div>
+<div class="span4" id="results">
+
+   </div>
+<div class="span4" id="works">
+<div>Article count: <span id="articleCount">0</span></div>
+</div>
+  </div>
+
+<!--
+  <footer>
+<p>&copy; Company 2012</p>
+  </footer>
+-->
+</div> <!-- /container -->
+<script src="js/bootstrap.min.js"></script>
+</body>
+</html>

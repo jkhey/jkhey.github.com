@@ -1,13 +1,410 @@
     <!DOCTYPE html>
     <html>
     <head>
-    <title>Bootstrap 101 Template</title>
+    <meta charset="utf-8">
+    <title>Bootstrap, from Twitter</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
     <!-- Bootstrap -->
+    
     <link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
-    </head>
-    <body>
-    <h1>Hello, world!</h1>
-    <script src="http://code.jquery.com/jquery-latest.js"></script>
+        <style type="text/css">
+      body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
+    </style>
+    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+        <script src="http://code.jquery.com/jquery-latest.js"></script>
+        <!--
+   <script type="text/javascript">
+jQuery.support.cors = true;
+xhtml = 0;
+</script>
+<script type="text/javascript">
+
+var appName = "224470675337.apps.googleusercontent.com";
+var fusionTableRealName = "Poets-In-Residence-YOUR-DATA-DO-NOT-EDIT-OR-DELETE";
+var fusionTableEncName = "";
+var accessToken = "";
+var params = {};
+var tries = 0;  // attempts at loading the main table
+var VAL_TO_ID = 1;
+var max_id = -1;
+var online = false;
+
+function getURLParameter(name) {
+    return decodeURIComponent(
+        (RegExp('[?|&|#]' + name + '=' + '(.+?)(&|$)').exec(location.search)||[,null])[1]
+    );
+}
+
+function consoleLog(toWrite){
+	if(typeof(console) !== 'undefined' && console && console.log) console.log(toWrite);
+	else $("body").append(toWrite + "<br/>");
+}
+
+$(document).ready(function(){
+
+// get the parameters from the 
+var queryString = location.hash.substring(1),
+    regex = /([^&=]+)=([^&]*)/g, m;
+while (m = regex.exec(queryString)) {
+  params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
+}
+consoleLog(params);
+
+getMaxId();
+pirLoad();
+
+// if the user is not logged in yet, divert to login url - they will be diverted back to this page after login, with info in the url
+/*if(!params["access_token"]){
+	window.location.href = "https://accounts.google.com/o/oauth2/auth?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Ffusiontables+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile&redirect_uri=http%3A%2F%2Fwww25.brinkster.com%2Fjkhey%2Fpoetsinresidence%2Findex.html&response_type=token&client_id=" + appName;
+	return true; // get out of here
+}
+
+accessToken = params["access_token"];
+
+
+
+
+
+$.ajax(
+			{ 
+url:"https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=" + accessToken
+, cache:'false', error: function(err1, err2, err3){ consoleLog(err1);},
+//headers:{"Authorization": "Bearer " + params["access_token"]},
+			success: function(jsnRet, textStatus) { 
+consoleLog("------------");
+consoleLog(jsnRet);
+consoleLog("------------");
+				online = true;
+				getPIRTable();
+			}
+		});
+		*/
+/*
+$.ajax(
+			{ 
+url:"https://www.googleapis.com/oauth2/v1/userinfo?access_token=" + accessToken
+, cache:'false', error: function(err1, err2, err3){ consoleLog(err1);},
+//headers:{"Authorization": "Bearer " + params["access_token"]},
+			success: function(jsnRet, textStatus) { 
+consoleLog("************");
+consoleLog(jsnRet);
+consoleLog("************");
+			}
+		});*/
+		
+});
+
+
+
+function getPIRTable(){
+	// if logged in, check if they have the PIR fusion table already, if not, create it
+	$.ajax({ 
+		url: formatSqlURL("SHOW TABLES")
+		, dataType: 'json', cache:'false', type:"POST" , error: function(err1, err2, err3){ tries++; if(tries < 5) getPIRTable(); consoleLog(err1);},
+		success: function(jsnRet, textStatus) { 
+			if(jsnRet){	
+				var rows = jsnRet.rows[0];
+consoleLog(rows);
+				for(var i = 0; i < rows.length; i++){
+					if(rows[1] == fusionTableRealName) fusionTableEncName = rows[0];
+				}
+				if(!fusionTableEncName) { // if the PIR table can't be found, create it
+					var sql = "CREATE TABLE '" + fusionTableRealName + "'  (pirfrom:NUMBER, pirto:NUMBER, pirtype:STRING, pirvalue:STRING, pircreated:DATETIME, piredited:DATETIME)";
+					max_id = 1; // set max_id if new table
+					$.ajax(
+						{ 
+						url: formatSqlURL(sql)
+						, dataType: 'json', cache:'false', type:"POST" , error: function(err1, err2, err3){ consoleLog(err1);},
+						success: function(jsnRet, textStatus) {
+							// have a go at getting the table name again
+							tries++;
+							if(tries < 5) getPIRTable();
+						}
+					});
+				} else { // if table reached, load data from it according to the info in the URL
+					getMaxId();
+				}
+consoleLog(fusionTableEncName);
+			}
+		}
+	});
+}
+
+function formatSqlURL(sql){
+	return "https://www.googleapis.com/fusiontables/v1/query?sql=" + encodeURIComponent(sql) + "&encid=true&access_token=" + accessToken;
+}
+
+
+function getMaxId(){
+consoleLog("GETTING MAX ID " + max_id);
+	if(max_id == 2) return pirLoad(); // if the table has just been created don't bother looking
+consoleLog(max_id);
+	if(online){
+		$.ajax({ 
+			url: formatSqlURL("SELECT MAXIMUM(pirfrom) FROM " + fusionTableEncName)
+			, dataType: 'json', cache:'false', type:"POST" , error: function(err1, err2, err3){ consoleLog(err1);},
+			success: function(jsnRet, textStatus) { 
+				tries = 0;
+				max_id = jsnRet.rows[0][0];
+				if(max_id < 2) max_id = 2;
+				pirLoad();
+			}
+		});
+	} else {
+		max_id = (localStorage["MAXID"] && localStorage["MAXID"] >= 2?localStorage["MAXID"]:2);
+	}
+}
+
+function pirLoad(){
+	if(params["pirid"]){ // load if particular data specified
+		var pirtemplate = params["pirtemplate"];
+		if(!pirtemplate){ // get type from database or default to "poem" ???
+			pirtemplate = "poem";
+		}
+		var el = $("#pir-templates .pir-template[pirtemplate='" + pirtemplate + "']").clone();
+		labelWithId(el, params["pirid"]);
+		$("body").append(el);
+		descend(el);
+	} else { // load user home page with list of recent poems and collections
+		
+	
+	
+	
+	}
+}
+
+function descend(el, givenid){ //pirfrom, pirto, privalue, el){
+	var children = el.children();
+	if(!givenid) givenid = el.attr("pirid");
+	for(var i = 0; i < children.length; i++){
+		var child = $(children[i]);
+		if(online){
+			if(child.hasClass("pir-going")){ // more tree to descend
+				var sql = "SELECT pirto, ROWID FROM " + fusionTableEncName + " WHERE pirfrom = '" + givenid + "' AND pirtype = '" + child.attr("pirtype") + "'";
+				if(child.hasClass("pir-rev")) sql = "SELECT pirfrom FROM " + fusionTableEncName + " WHERE pirto = '" + givenid + "' AND  pirtype = '" + child.attr("piredge") + "'";
+				$.ajax({ 
+					url: formatSqlURL(sql)
+					,context: child, dataType: 'json', cache:'false', type:"POST" , error: function(err1, err2, err3){ consoleLog(err1);},
+					success: function(jsnRet, textStatus) { 
+						labelWithId(this, jsnRet.rows[0][0], jsnRet.rows[0][1]);
+						descend(this);
+					}
+				});
+			} else if(child.hasClass("pir-end")) {  // terminal value
+				var sql = "SELECT pirvalue, ROWID FROM " + fusionTableEncName + " WHERE pirfrom = '" + givenid + "' AND pirto = '" + VAL_TO_ID + "' AND pirtype = '" + child.attr("pirtype") + "'";
+				$.ajax({ 
+					url: formatSqlURL(sql)
+					,context: child, dataType: 'json', cache:'false', type:"POST" , error: function(err1, err2, err3){ consoleLog(err1);},
+					success: function(jsnRet, textStatus) { 
+						this.val(jsnRet.rows[0][0]);
+						labelWithId(this, VAL_TO_ID, jsnRet.rows[0][1]);
+					}
+				});
+			}
+		} else {
+			if(child.hasClass("pir-going")){ // more tree to descend
+				var sql = givenid + "-" + child.attr("piredge") + "-" + child.attr("pirtype");
+				if(child.hasClass("pir-rev")) sql = child.attr("piredge") + "-" + givenid + "-" + child.attr("pirtype");
+				labelWithId(child, givenid);
+				descend(child);
+			} else if(child.hasClass("pir-end")) {  // terminal value
+				var sql = givenid + "-" + VAL_TO_ID + "-" + child.attr("pirtype");
+consoleLog("sql = " + sql);
+				child.val(localStorage[sql]);
+				labelWithId(child, VAL_TO_ID);
+			} else { // not a data relevant element
+				descend(child, givenid);
+			}
+					
+		}
+	}
+	//else if(pirfrom && pirvalue) sql = sql.replace("$KNOWN_COL_1", "pirfrom").replace("$KNOWN_VAL1", pirfrom).replace("$KNOWN_COL_2","pirvalue").replace("$KNOWN_VAL2", pirvalue).replace("$RETURN_VAL", "pirto");
+	//else if(pirvalue && pirto) sql = sql.replace("$KNOWN_COL_1", "pirvalue").replace("$KNOWN_VAL1", pirvalue).replace("$KNOWN_COL_2","pirto").replace("$KNOWN_VAL2", prito).replace("$RETURN_VAL", "pirfrom");
+
+
+}
+
+function labelWithId(el, id, rowid){
+	if(id) el.attr("pirid", id);
+	if(rowid) el.attr("pirrowid", rowid);
+	if(id || rowid) el.addClass("pir-ided");
+}
+
+function save(el){ //pirfrom, pirto, privalue, el){
+	if(el.hasClass("pirfirstline")){
+		el.val($.trim(el.next().val().substring(0, (el.next().val().indexOf("\n") >= 0?el.next().val().indexOf("\n"):el.next().val().length))));
+	}
+consoleLog(el);
+consoleLog(max_id);
+	if(!el.hasClass("pir-ided")) {
+		if(el.hasClass("pir-going")) {
+			labelWithId(el, incrementMaxId());
+		} else if(el.hasClass("pir-end")) {
+			if(el.hasClass("reverse")){
+				pirInsert(el, el.attr("pirid"), el.parent().closest(".pir-ided").attr("pirid"), el.attr("pirtype"), el.val());
+			} else {
+				pirInsert(el, el.parent().closest(".pir-ided").attr("pirid"), (el.attr("pirid")?el.attr("pirid"):VAL_TO_ID), el.attr("pirtype"), el.val());
+			}
+		} 
+	} else if (el.hasClass("pir-end")) {
+		if(online) pirUpdate(el);
+		else {
+			if(el.hasClass("reverse")){
+				pirInsert(el, el.attr("pirid"), el.closest(".pir-ided").attr("pirid"), el.attr("pirtype"), el.val());
+			} else {
+				pirInsert(el, el.closest(".pir-ided").attr("pirid"), (el.attr("pirid")?el.attr("pirid"):VAL_TO_ID), el.attr("pirtype"), el.val());
+			}
+		}
+	}
+	
+	var children = el.children();
+	for(var i = 0; i < children.length; i++) {
+		save($(children[i]));
+	}
+}
+
+function incrementMaxId(){
+	++max_id;
+	if(!online) localStorage["MAXID"] = max_id;
+	return max_id;
+}
+
+function pirUpdate(el){
+	$.ajax({ 
+		url: formatSqlURL("UPDATE " + fusionTableEncName + " SET 'pirvalue' = '" + el.val() + "' WHERE ROWID = '" + el.attr("pirrowid") + "'")  // also need to add piredited
+		,context: el, dataType: 'json', cache:'false', type:"POST" , error: function(err1, err2, err3){ tries++; if(tries < 5) pirUpdate(this); consoleLog(err1);},
+		success: function(jsnRet, textStatus) { 
+			tries = 0;
+			// display fact that saved - disable save key until new change?
+consoleLog(jsnRet);
+		}
+	});
+}
+
+function pirInsert(el, pirfrom, pirto, pirtype, pirvalue, id) {
+	labelWithId(el, id);
+	if(online){
+		$.ajax({ 
+			url: formatSqlURL("INSERT INTO " + fusionTableEncName + " ('pirfrom', 'pirto', 'pirtype', 'pirvalue') VALUES (" + pirfrom + "," + pirto + ", '" + pirtype + "', '" + pirvalue + "')")  // also need to add pircreated and piredited
+			,context: {a:el, b:pirto, c:pirfrom, d:pirvalue, e:id}, dataType: 'json', cache:'false', type:"POST" , error: function(err1, err2, err3){ tries++; if(tries < 5) pirInsert(this.a, this.b, this.c, this.d, this.e); consoleLog(err1);},
+			success: function(jsnRet, textStatus) { 
+				// label this and parents with returned ROWIDs ... and display fact that saved - disable save key until new change?
+				tries = 0;
+consoleLog(jsnRet);
+				labelWithId(this.a, false, jsnRet.rows[0][0]);
+			}
+		});
+	} else {
+		localStorage[pirfrom + "-" + pirto + "-" + pirtype] = pirvalue;
+	}
+}
+
+</script>-->
+
+<!-- Fav and touch icons -->
+    <link rel="shortcut icon" href="../assets/ico/favicon.ico">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">
+</head>
+<body>
+   <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="#">Project name</a>
+          <div class="nav-collapse collapse">
+            <ul class="nav">
+              <li class="active"><a href="#">Home</a></li>
+              <li><a href="#about">About</a></li>
+              <li><a href="#contact">Contact</a></li>
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                  <li><a href="#">Action</a></li>
+                  <li><a href="#">Another action</a></li>
+                  <li><a href="#">Something else here</a></li>
+                  <li class="divider"></li>
+                  <li class="nav-header">Nav header</li>
+                  <li><a href="#">Separated link</a></li>
+                  <li><a href="#">One more separated link</a></li>
+                </ul>
+              </li>
+            </ul>
+            <form class="navbar-form pull-right">
+              <input class="span2" type="text" placeholder="Email">
+              <input class="span2" type="password" placeholder="Password">
+              <button type="submit" class="btn">Sign in</button>
+            </form>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <!-- Main hero unit for a primary marketing message or call to action -->
+      <div class="hero-unit">
+        <h1>Hello, world!</h1>
+        <p>This is a template for a simple marketing or informational website. It includes a large callout called the hero unit and three supporting pieces of content. Use it as a starting point to create something more unique.</p>
+        <p><a class="btn btn-primary btn-large">Learn more &raquo;</a></p>
+      </div>
+
+      <!-- Example row of columns -->
+      <div class="row">
+        <div class="span4">
+          <h2>Heading</h2>
+          <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
+          <p><a class="btn" href="#">View details &raquo;</a></p>
+        </div>
+        <div class="span4">
+          <h2>Heading</h2>
+          <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
+          <p><a class="btn" href="#">View details &raquo;</a></p>
+       </div>
+        <div class="span4">
+          <h2>Heading</h2>
+          <p>Donec sed odio dui. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Vestibulum id ligula porta felis euismod semper. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>
+          <p><a class="btn" href="#">View details &raquo;</a></p>
+        </div>
+      </div>
+
+      <hr>
+
+      <footer>
+        <p>&copy; Company 2012</p>
+      </footer>
+
+    </div> <!-- /container -->
+<!--
+<button onclick="consoleLog(localStorage);">log local storage</button>
+<button onclick="localStorage.clear();">clear local storage</button>
+<button onclick="$(body).append($('#pir-templates .pir-template[pirtemplate=\'poem\']').clone());">add new poem</button>
+<div id="pir-templates" style="display:nojjjne">
+
+<div class="pir-template pir-going" pirtemplate="poem">
+	<button onclick="save($(this).closest('.pir-template'));">save</button>
+	<input type="text" class="pir-end pirfirstline"  pirtype="POEM">
+	<textarea class="pir-end" pirtype="TEXT">test text</textarea>
+</div>
+
+</div>
+<script type="text/javascript">
+//document.write(getURLParameter("access_token"));
+//document.write(document.location.href);
+consoleLog(document.location);
+</script>-->
+
     <script src="js/bootstrap.min.js"></script>
     </body>
     </html>
