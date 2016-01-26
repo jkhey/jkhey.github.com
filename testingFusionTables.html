@@ -17,7 +17,7 @@ xhtml = 0;
 </script>
 <script type="text/javascript">
 
-var appName = "224470675337.apps.googleusercontent.com";
+var appName = "678528545678-lvifp2j9l3b1vb0rcouq92oh69dr0gbe.apps.googleusercontent.com";
 var fusionTableRealName = "Poets-In-Residence-YOUR-DATA-DO-NOT-EDIT-OR-DELETE";
 var fusionTableEncName = "";
 var accessToken = "";
@@ -49,7 +49,7 @@ consoleLog(params);
 
 // if the user is not logged in yet, divert to login url - they will be diverted back to this page after login, with info in the url
 if(!params["access_token"]){
-	window.location.href = "https://accounts.google.com/o/oauth2/auth?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Ffusiontables+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile&redirect_uri=http%3A%2F%2Fwww25.brinkster.com%2Fjkhey%2Fpoetsinresidence%2Findex.html&response_type=token&client_id=" + appName;
+	window.location.href = "https://accounts.google.com/o/oauth2/auth?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Ffusiontables+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile&redirect_uri=http%3A%2F%2Fjkhey.github.io%2FtestingFusionTables.html&response_type=token&client_id=" + appName;
 	return true; // get out of here
 }
 
@@ -61,7 +61,7 @@ getPIRTable();
 
 $.ajax(
 			{ 
-url:"https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=" + accessToken
+url:"https://www.googleapis.com/oauth2/v2/tokeninfo?access_token=" + accessToken
 , cache:'false', error: function(err1, err2, err3){ consoleLog(err1);},
 //headers:{"Authorization": "Bearer " + params["access_token"]},
 			success: function(jsnRet, textStatus) { 
@@ -73,7 +73,7 @@ consoleLog("------------");
 
 $.ajax(
 			{ 
-url:"https://www.googleapis.com/oauth2/v1/userinfo?access_token=" + accessToken
+url:"https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + accessToken
 , cache:'false', error: function(err1, err2, err3){ consoleLog(err1);},
 //headers:{"Authorization": "Bearer " + params["access_token"]},
 			success: function(jsnRet, textStatus) { 
@@ -121,7 +121,7 @@ consoleLog(fusionTableEncName);
 }
 
 function formatSqlURL(sql){
-	return "https://www.googleapis.com/fusiontables/v1/query?sql=" + encodeURIComponent(sql) + "&encid=true&access_token=" + accessToken;
+	return "https://www.googleapis.com/fusiontables/v2/query?sql=" + encodeURIComponent(sql) + "&encid=true&access_token=" + accessToken;
 }
 
 
